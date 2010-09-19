@@ -1,0 +1,85 @@
+<!doctype html>
+
+<script src="dojo.js"></script>
+<script>
+// Handles messages from our content script.
+safari.application.addEventListener("message", function(evt){
+  switch(evt.name){
+    case "readSettings":
+      onReadSettings(evt.message, evt.target);
+    case "expandHashes":
+      onExpandHashes(evt.message, evt.target);
+      break;
+  }
+}, false);
+
+function onReadSettings(keys, target){
+  var settings = {};
+  keys.forEach(function(key){
+    settings[key] = safari.extension.settings.getItem(key);
+  });
+  target.page.dispatchMessage("settings", settings);
+}
+
+// Credentials for the bit.ly API.
+// Note that these are always available in an extension, since you can get at
+// its raw source code.
+var auth = {
+  login: "11bornbitlycrx",
+  apiKey: "R_a9da7a26fd507dbba3707ffc291c9816"
+};
+
+// We'll cache expanded URLs to save on API calls.
+var cache = {}, ignores = {};
+
+function onExpandHashes(hashes, target){
+  // Stores the mapping of the hashes to their expanded URLs.
+  var mapping = {};
+  // Callback when all hashes have been mapped.
+  var sendMapping = function(){
+    target.page.dispatchMessage("mappingComplete", mapping);
+  };
+  var unknown = [];
+  hashes.forEach(function(hash){
+    if(hash in cache){
+      mapping[hash] = cache[hash];
+    }else if(!(hash in ignores)){
+      unknown.push(hash);
+    }
+  });
+  
+  // If all hashes have been mapped there's no need to make an API call, fire
+  // the callback straight away.
+  if(!unknown.length){
+    sendMapping();
+    return;
+  }
+  
+  // Call bit.ly to expand the unknown hashes. We can pass a maximum of 15 hashes
+  // per call.
+  var outstandingHashes = unknown.length;
+  while(unknown.length){
+    // API call. bit.ly expects multiple `hash` parameters, which Dojo's XHR
+    // doesn't support. We'll concatenate the request URL ourselves.
+    dojo.xhrGet({
+      url: "http://api.bit.ly/v3/expand?hash=" + unknown.splice(0, 15).join("&hash="),
+      content: auth,
+      handleAs: "json",
+      load: function(response){
+        // Map the possible hashes to the expanded URL.
+        response.data.expand.forEach(function(exp){
+          outstandingHashes--;
+          
+          if("error" in exp){
+            ignores[exp.hash] = true;
+          }else{
+            mapping[exp.hash] = cache[exp.global_hash] = cache[exp.user_hash] = exp.long_url;
+          }
+        });
+        // And fire the callback, if there are no more outstanding hashes
+        !outstandingHashes && sendMapping();
+      }
+    });
+  }
+}
+</script>
