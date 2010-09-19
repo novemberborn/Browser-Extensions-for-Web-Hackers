@@ -33,8 +33,8 @@ function parseUrls(){
 }
 
 // Send a message to the background page do get the expanded URL
-// for the hashes. It'll invoke our callback function with a
-// mapping object from hash to expanded URL.
+// for the hashes. The background page will send a message to us
+// with a  mapping object from hash to expanded URL.
 var parsed = parseUrls();
 safari.self.addEventListener("message", function(evt){
   if(evt.name == "mappingComplete"){
