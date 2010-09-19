@@ -5,7 +5,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Extension Notify</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.github.novemberborn-browser-extensions-for-web-hackers</string>
+	<string>com.github.novemberborn.browser-extensions-for-web-hackers.extension-notify</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleShortVersionString</key>
