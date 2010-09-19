@@ -1,0 +1,17 @@
+<script src="dojo.js"></script>
+
+<form id="settings">
+<label><input type="checkbox" checked id="sameWindow"> Open links in same window</label><br>
+<label><input type="checkbox" checked id="expandURLs"> Expand bit.ly URLs</label>
+</form>
+
+<script>
+var settings = localStorage.settings ? JSON.parse(localStorage.settings) : {};
+["sameWindow", "expandURLs"].forEach(function(key){
+  document.forms.settings[key].checked = settings[key] === false ? false : true;
+  dojo.connect(document.forms.settings[key], "change", function(){
+    settings[key] = this.checked;
+    localStorage.settings = JSON.stringify(settings);
+  });
+});
+</script>

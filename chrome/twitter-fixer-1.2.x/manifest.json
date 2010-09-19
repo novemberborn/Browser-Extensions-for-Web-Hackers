@@ -1,0 +1,15 @@
+{
+  "name": "Twitter Fixer",
+  "version": "1.2.0",
+  "description": "Expands shortened URLs (by bit.ly) on Twitter.com. Also fixes the links on Twitter.com to open in the same window, rather than a new one.",
+  "permissions": ["http://api.bit.ly/*"],
+  "options_page": "options.html",
+  "background_page": "background.html",
+  "content_scripts": [
+    {
+      "run_at": "document_end",
+      "matches": ["http://*.twitter.com/*", "https://*.twitter.com/*"],
+      "js": ["fixer.js"]
+    }
+  ]
+}
