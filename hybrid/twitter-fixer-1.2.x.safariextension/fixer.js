@@ -1,12 +1,12 @@
-function parseUrls(){
+function parseUrls(settings){
   // Bit.ly URLs have a domain followed by a hash, which is six (or more)
   // ASCII letters or digits.
-  var reMatchHash = /^http:\/\/.+\..+\/(\w{6,})$/;
+  var reMatchHash = /^http:\/\/.+\..+\/(\w{5,})$/;
   
   var hashes = [];
   var hashToLink = {};
   Array.prototype.slice.call(document.querySelectorAll("a[href]")).forEach(function(link){
-    link.removeAttribute("target");
+    settings.sameWindow && link.removeAttribute("target");
     
     var url = link.href;
     
@@ -32,14 +32,16 @@ function parseUrls(){
   return { hashes: hashes, links: hashToLink };
 }
 
-// Send a message to the background page do get the expanded URL
-// for the hashes. It'll invoke our callback function with a
-// mapping object from hash to expanded URL.
-var parsed = parseUrls();
-hybrid.send("expandHashes", parsed.hashes, function(mapping){
-  for(hash in mapping){
-    parsed.links[hash].forEach(function(link){
-      link.textContent = mapping[hash];
-    });
-  }
+hybrid.send("settings", ["sameWindow", "expandURLs"], function(settings){
+  // Send a message to the background page do get the expanded URL
+  // for the hashes. It'll invoke our callback function with a
+  // mapping object from hash to expanded URL.
+  var parsed = parseUrls(settings);
+  settings.expandURLs && hybrid.send("expandHashes", parsed.hashes, function(mapping){
+    for(hash in mapping){
+      parsed.links[hash].forEach(function(link){
+        link.textContent = mapping[hash];
+      });
+    }
+  });
 });

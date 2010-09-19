@@ -3,6 +3,10 @@
 <script src="dojo.js"></script>
 <script src="hybrid.js"></script>
 <script>
+hybrid.on("settings", function(settingKeys, sendResponse){
+  sendResponse(hybrid.readSettings(settingKeys));
+});
+
 // Credentials for the bit.ly API.
 // Note that these are always available in an extension, since you can get at
 // its raw source code.

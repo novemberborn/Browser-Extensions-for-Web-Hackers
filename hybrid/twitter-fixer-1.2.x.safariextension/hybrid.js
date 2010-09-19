@@ -52,4 +52,18 @@ var hybrid = new function(){
       }
     }, false);
   }
+  
+  this.readSettings = function(keys){
+    var settings;
+    if(isSafari){
+      settings = safari.extension.settings;
+    }else if(isChrome){
+      settings = localStorage.settings ? JSON.parse(localStorage.settings) : {};
+    }
+    var requestedSettings = {};
+    keys.forEach(function(key){
+      requestedSettings[key] = settings[key] === false ? false : true;
+    });
+    return requestedSettings;
+  };
 };

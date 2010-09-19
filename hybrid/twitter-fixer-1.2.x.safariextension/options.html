@@ -1,0 +1,54 @@
+<!doctype html>
+
+<script src="dojo.js"></script>
+
+<form id="settings"></form>
+
+<script>
+dojo.xhrGet({
+  url: "Settings.plist",
+  handleAs: "xml",
+  load: function(plist){
+    Array.prototype.slice.call(plist.querySelectorAll("plist > array > dict")).forEach(function(dict){
+      var obj = dictToObject(dict);
+      if(obj.Type != "CheckBox"){ throw new Error("Unknown type '" + obj.Type + "'"); }
+      var label = dojo._toDom(dojo.replace(
+          '<label><input type="checkbox" {checked} id="{key}"> {title}</label>',
+          { checked: obj.DefaultValue ? "checked" : "", key: obj.Key, title: obj.Title }));
+      dojo.place(label, "settings");
+      dojo.create("br", null, "settings");
+    });
+    
+    var settings = localStorage.settings ? JSON.parse(localStorage.settings) : {};
+    ["sameWindow", "expandURLs"].forEach(function(key){
+      document.forms.settings[key].checked = settings[key] === false ? false : true;
+      dojo.connect(document.forms.settings[key], "change", function(){
+        settings[key] = this.checked;
+        localStorage.settings = JSON.stringify(settings);
+      });
+    });
+  }
+});
+
+function dictToObject(dict){
+  var obj = {};
+  for(var key = dict.firstElementChild; key && key.nextElementSibling; key = key.nextElementSibling.nextElementSibling){
+    var value = key.nextElementSibling;
+    switch(value.nodeName){
+      case "true":
+        value = true;
+        break;
+      case "false":
+        value = false;
+        break;
+      case "string":
+        value = value.textContent;
+        break;
+      default:
+        throw new Error("Unsupported value node <" + value.nodeName + ">");
+    }
+    obj[key.textContent] = value;
+  }
+  return obj;
+};
+</script>
