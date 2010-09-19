@@ -10,8 +10,8 @@ chrome.extension.onRequest.addListener(function(evt, sender, sendResponse){
       requestedSettings[key] = settings[key] === false ? false : true;
     });
     sendResponse(requestedSettings);
-  }else if("hashes" in evt){
-    onHashes(evt.hashes, sendResponse);
+  }else if("urls" in evt){
+    onURLs(evt.urls, sendResponse);
   }
 });
 
@@ -27,50 +27,50 @@ var auth = {
 var cache = {}, ignores = {};
 
 // Handles messages from our content script.
-function onHashes(hashes, sendResponse){
-  // Stores the mapping of the hashes to their expanded URLs.
+function onURLs(urls, sendResponse){
+  // Stores the mapping of the urls to their expanded URLs.
   var mapping = {};
-  // Callback when all hashes have been mapped.
+  // Callback when all urls have been mapped.
   var sendMapping = function(){ sendResponse(mapping); };
   var unknown = [];
-  hashes.forEach(function(hash){
-    if(hash in cache){
-      mapping[hash] = cache[hash];
-    }else if(!(hash in ignores)){
-      unknown.push(hash);
+  urls.forEach(function(url){
+    if(url in cache){
+      mapping[url] = cache[url];
+    }else if(!(url in ignores)){
+      unknown.push(url);
     }
   });
   
-  // If all hashes have been mapped there's no need to make an API call, fire
+  // If all urls have been mapped there's no need to make an API call, fire
   // the callback straight away.
   if(!unknown.length){
     sendMapping();
     return;
   }
   
-  // Call bit.ly to expand the unknown hashes. We can pass a maximum of 15 hashes
+  // Call bit.ly to expand the unknown urls. We can pass a maximum of 15 urls
   // per call.
-  var outstandingHashes = unknown.length;
+  var outstandingURLs = unknown.length;
   while(unknown.length){
-    // API call. bit.ly expects multiple `hash` parameters, which Dojo's XHR
+    // API call. bit.ly expects multiple `shortUrl` parameters, which Dojo's XHR
     // doesn't support. We'll concatenate the request URL ourselves.
     dojo.xhrGet({
-      url: "http://api.bit.ly/v3/expand?hash=" + unknown.splice(0, 15).join("&hash="),
+      url: "http://api.bit.ly/v3/expand?shortUrl=" + unknown.splice(0, 15).join("&shortUrl="),
       content: auth,
       handleAs: "json",
       load: function(response){
-        // Map the possible hashes to the expanded URL.
+        // Map the possible urls to the expanded URL.
         response.data.expand.forEach(function(exp){
-          outstandingHashes--;
+          outstandingURLs--;
           
           if("error" in exp){
-            ignores[exp.hash] = true;
+            ignores[exp.short_url] = true;
           }else{
-            mapping[exp.hash] = cache[exp.global_hash] = cache[exp.user_hash] = exp.long_url;
+            mapping[exp.short_url] = cache[exp.short_url] = exp.long_url;
           }
         });
-        // And fire the callback, if there are no more outstanding hashes
-        !outstandingHashes && sendMapping();
+        // And fire the callback, if there are no more outstanding urls
+        !outstandingURLs && sendMapping();
       }
     });
   }
