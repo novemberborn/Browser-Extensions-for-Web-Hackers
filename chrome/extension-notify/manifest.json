@@ -1,0 +1,10 @@
+{
+  "name": "Extension Notify",
+  "version": "1.0",
+  "content_scripts": [
+    {
+      "matches": ["http://*/*"],
+      "js": ["communication.js"]
+    }
+  ]
+}
