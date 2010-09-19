@@ -1,0 +1,11 @@
+{
+  "name": "Twitter Fixer",
+  "version": "1.0.0",
+  "description": "Fix the external links on Twitter.com to open in the same window, rather than a new one.",
+  "content_scripts": [
+    {
+      "matches": ["http://*.twitter.com/*", "https://*.twitter.com/*"],
+      "js": ["fixer.js"]
+    }
+  ]
+}
