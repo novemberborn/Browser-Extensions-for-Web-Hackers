@@ -32,7 +32,7 @@ var auth = {
 // We'll cache expanded URLs to save on API calls.
 var cache = {}, ignores = {};
 
-function onExpandHashes(urls, target){
+function onExpandURLs(urls, target){
   // Stores the mapping of the urls to their expanded URLs.
   var mapping = {};
   // Callback when all hashes have been mapped.
